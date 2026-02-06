@@ -2,8 +2,8 @@ import time, pyperclip, re
 
 def login_DBStudio(page):
     try:
-        usuario = 'orojas'
-        contra = 'Illidan1<1'
+        usuario = ''
+        contra = ''
         page.wait_for_selector("#input-11")
         page.wait_for_selector("#input-12")
         page.fill("#input-11", usuario)
@@ -65,7 +65,7 @@ def DBERP(page, query, lista_ids):
         texto_total = page.inner_text("#id_10000001 > div.ax-table-container > div > table > tbody > tr > td.pl-1.pr-2.cell-align-right.ax-grid-cell-rows > div > div")
         print(texto_total)
         meta_real = int(''.join(filter(str.isdigit, texto_total)))
-        #selector de resultado
+       
         selector_resultados = "#id_10000002 > div.ax-table-container > div"
         page.wait_for_selector(selector_resultados)
 
@@ -86,22 +86,17 @@ def DBERP(page, query, lista_ids):
             
             actual = len(resultados_totales)
             print(f"   -> Progreso: {actual}/{meta_real}")
-
-            # Si ya tenemos todo, salimos
             if actual >= meta_real:
                 break
-
-            # Si se atasca (el contador no sube), salimos para no colgar
             if actual == ultimo_tamano:
                 intentos_sin_cambio += 1
                 if intentos_sin_cambio > 20: 
-                    print("⚠️ Se atascó el scroll. Devolviendo lo encontrado.")
+                    print("Se atascó el scroll. Devolviendo lo encontrado.")
                     break
             else:
                 intentos_sin_cambio = 0
                 ultimo_tamano = actual
-            
-            # Scroll suave para que cargue
+                
             page.mouse.wheel(0, 200) 
             time.sleep(0.3)
             
@@ -124,7 +119,7 @@ def parsear_texto_visible_ERP(texto):
                 estado = "SIN"
                 try:
                     sig = next(iterador)
-                    if sig.isdigit() and len(sig) < 4: sig = next(iterador) # Salta indices
+                    if sig.isdigit() and len(sig) < 4: sig = next(iterador) 
                     if any(c.isdigit() for c in sig): monto = sig.replace(',', '')
                     else: 
                         if len(sig) <= 3 and sig.isupper(): estado = sig
@@ -132,7 +127,6 @@ def parsear_texto_visible_ERP(texto):
                         sig = next(iterador)
                         if len(sig) <= 3 and sig.isupper(): estado = sig
                 except: pass
-                # Llave única para que no borre duplicados
                 resultados[f"{docser}|{monto}|{estado}"] = [docser, monto, estado]
     except StopIteration: pass
     return resultados
@@ -204,4 +198,5 @@ def parsear_texto_visible(texto):
                 else:
                     resultados[boleta] = "SIN_ESTADO"
                     
+
     return resultados
