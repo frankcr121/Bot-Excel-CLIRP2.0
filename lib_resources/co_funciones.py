@@ -3,12 +3,12 @@ import time
 
 def buscando_sheets():
     try:
-        print("--- PASO 1: Conectando a Google Sheets ---")
+        print("--- Conectando a Google Sheets ---")
         sheet = conectar_sheet()
         if not sheet:
             return False, None, None
 
-        print("--- PASO 2: Descargando datos... ---")
+        print("--- Descargando datos... ---")
         datos = sheet.get_all_values()
         
         hay_trabajo = False
@@ -32,48 +32,37 @@ def buscando_sheets():
 def filtrar_pendientes(datos):
     trabajos_pendientes = []
     
-    print("--- Clasificando pendientes (esto puede tardar unos segundos) ---")
+    print("--- Clasificando pendientes........ ---")
     
     for i, fila in enumerate(datos):
-        if i == 0: continue # Saltamos cabecera
+        if i == 0: continue 
 
         if len(fila) > 10:
-            estado = fila[14].strip() # Columna K
-            tipo   = fila[2].strip()  # Columna C
-
+            estado = fila[14].strip()
+            tipo   = fila[2].strip()  
             if estado == "PENDIENTE" and tipo.upper() == "AXIONAL":
-                dato_input = fila[5] # Columna D (Dato para el Query)
-                fila_excel = i + 1   # Fila real en el Sheet
-                
-                # Guardamos la pareja (Fila, Dato) en la lista
+                dato_input = fila[5] 
+                fila_excel = i + 1   
                 trabajos_pendientes.append((fila_excel, dato_input))
     
     print(f"--- Total detectado: {len(trabajos_pendientes)} registros para procesar ---")
     return trabajos_pendientes
 
 def actualizar_lote_en_sheet(sheet, lista_lote, resultados_dict):
-    """
-    Recibe el lote actual (ej: 50 items) y las respuestas del bot.
-    Actualiza el Excel fila por fila.
-    """
     contador_exitos = 0
     
     for fila_excel, boleta_id in lista_lote:
-        # Verificamos si esa boleta vino en la respuesta del Query
         if boleta_id in resultados_dict:
-            nuevo_estado = resultados_dict[boleta_id] # Ej: 'E'
+            nuevo_estado = resultados_dict[boleta_id] 
             
             try:
-                # Actualizar Columna F (6) con el estado (E)
                 sheet.update_cell(fila_excel, 6, nuevo_estado)
-                
-                # Actualizar Columna K (11) a FINALIZADO
                 sheet.update_cell(fila_excel, 15, "FINALIZADO")
                 
                 contador_exitos += 1
             except Exception as e:
                 print(f"Error actualizando fila {fila_excel}: {e}")
-                # Si falla Google, esperamos un poco
                 time.sleep(5)
     
+
     print(f"   -> Lote guardado: {contador_exitos} filas actualizadas.")
